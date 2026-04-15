@@ -206,14 +206,49 @@ li {
 
 </div>
 
-<script>
+<script type="module">
+
+// 🔥 FIREBASE IMPORTS
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+// 🔥 YOUR CONFIG (leave this exactly as-is)
+const firebaseConfig = {
+  apiKey: "AIzaSyBi3Fwchz4qDP8Jlx8ub91C_rrTXTwYeYU",
+  authDomain: "daily-planner-b0247.firebaseapp.com",
+  projectId: "daily-planner-b0247",
+  storageBucket: "daily-planner-b0247.firebasestorage.app",
+  messagingSenderId: "328069716394",
+  appId: "1:328069716394:web:577adf3a5addddf7e773d3",
+  measurementId: "G-CHCE42NKN5"
+};
+
+// 🔥 INIT FIREBASE
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const docRef = doc(db, "planner", "main");
+
+// SAVE DATA
+async function saveData(data){
+  await setDoc(docRef, data, { merge: true });
+}
+
+// LIVE SYNC (AUTO UPDATE)
+function listenData(callback){
+  onSnapshot(docRef, (docSnap)=>{
+    if(docSnap.exists()){
+      callback(docSnap.data());
+    }
+  });
+}
+
 function renderChecklist(id, arr){
 
 let ul = document.getElementById(id);
 ul.innerHTML = "";
 
 let storageKey = "checklist_" + id;
-let saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+let saved = window.globalData?.[storageKey] || {};
 
 arr.forEach((task, i)=>{
 
@@ -225,7 +260,7 @@ cb.checked = saved[i] || false;
 
 cb.onchange = ()=>{
 saved[i] = cb.checked;
-localStorage.setItem(storageKey, JSON.stringify(saved));
+let saved = window.globalData?.[storageKey] || {};
 };
 
 let span = document.createElement("span");
@@ -291,7 +326,7 @@ document.getElementById("date").textContent=now.toLocaleDateString();
 document.getElementById("day").textContent=now.toLocaleDateString("en-US",{weekday:"long"});
 
 //Water
-let water = JSON.parse(localStorage.getItem("water") || "[]");
+let water = [];
 if(water.length !== 8) water = Array(8).fill(false);
 
 function renderWater(){
@@ -311,7 +346,7 @@ span.style.opacity = v ? "1" : "0.3";
 
 span.onclick = ()=>{
 water[i] = !water[i];
-localStorage.setItem("water", JSON.stringify(water));
+saveData({ water });
 renderWater();
 };
 
@@ -329,9 +364,15 @@ document.getElementById("moodDisplay").textContent=localStorage.getItem("mood")|
 
 // Save text
 ["goal","reminders","notes","grateful"].forEach(id=>{
-let el=document.getElementById(id);
-el.value=localStorage.getItem(id)||"";
-el.oninput=()=>localStorage.setItem(id,el.value);
+  let el = document.getElementById(id);
+
+  // LOAD from Firebase
+  el.value = window.globalData?.[id] || "";
+
+  // SAVE to Firebase
+  el.oninput = ()=>{
+    saveData({ [id]: el.value });
+  };
 });
 
 // Quote
@@ -350,32 +391,6 @@ renderQuote();
 
 // ================= CLEANING SYSTEM =================
 
-// ---------- DAILY CLEAN ----------
-function renderChecklist(id, arr){
-  let ul = document.getElementById(id);
-  ul.innerHTML = "";
-
-  let storageKey = "checklist_" + id;
-  let saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
-
-  arr.forEach((task, i)=>{
-    let li = document.createElement("li");
-
-    let cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = saved[i] || false;
-
-    cb.onchange = ()=>{
-      saved[i] = cb.checked;
-      localStorage.setItem(storageKey, JSON.stringify(saved));
-    };
-
-    li.appendChild(cb);
-    li.appendChild(document.createTextNode(" " + task));
-
-    ul.appendChild(li);
-  });
-}
 
 renderChecklist("dailyClean",[
   "Kitchen counters",
@@ -569,30 +584,34 @@ function renderMonthlyClean(){
 
 renderMonthlyClean();
 // TODOS
-let todos=JSON.parse(localStorage.getItem("todos")||"[]");
+let todos = [];
 
 function renderTodos(){
-let ul=document.getElementById("todoList");
-ul.innerHTML="";
-todos.forEach((t,i)=>{
-let li=document.createElement("li");
-li.textContent=t;
-li.onclick=()=>{
-todos.splice(i,1);
-localStorage.setItem("todos",JSON.stringify(todos));
-renderTodos();
-};
-ul.appendChild(li);
-});
+  let ul = document.getElementById("todoList");
+  ul.innerHTML = "";
+
+  todos.forEach((t,i)=>{
+    let li = document.createElement("li");
+    li.textContent = t;
+
+    li.onclick = ()=>{
+      todos.splice(i,1);
+      saveData({ todos });
+      renderTodos();
+    };
+
+    ul.appendChild(li);
+  });
 }
+
 function addTodo(){
-let v=document.getElementById("todoInput").value;
-if(!v) return;
-todos.push(v);
-localStorage.setItem("todos",JSON.stringify(todos));
-renderTodos();
+  let v = document.getElementById("todoInput").value;
+  if(!v) return;
+
+  todos.push(v);
+  saveData({ todos });
+  renderTodos();
 }
-renderTodos();
 
 // Homework
 let hw=JSON.parse(localStorage.getItem("hw")||"[]");
@@ -742,6 +761,29 @@ ul.appendChild(li);
 });
 }
 renderYoga();
+
+window.globalData = {};
+
+listenData((data)=>{
+  window.globalData = data;
+
+  // LOAD TODOS
+  todos = data.todos || [];
+  renderTodos();
+
+  // LOAD WATER
+  water = data.water || Array(8).fill(false);
+  renderWater();
+
+  // RE-RENDER CHECKLISTS
+  renderChecklist("dailyClean", [...]);   // keep your same arrays
+  renderChecklist("habits", [...]);
+  renderChecklist("morning", [...]);
+  renderChecklist("evening", [...]);
+
+  renderWeeklyClean();
+  renderMonthlyClean();
+});
 
 </script>
 
