@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Daily Reset 🌿</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #e8f5f2, #fdf6f9);
+  padding: 20px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.section {
+  margin-bottom: 18px;
+  padding: 15px;
+  border-radius: 14px;
+  background: #f9fbfa;
+}
+
+button {
+  padding: 8px 14px;
+  margin: 4px;
+  border: none;
+  border-radius: 10px;
+  background: #d7ebe5;
+  cursor: pointer;
+}
+
+.tab { display:none; }
+.activeTab { display:block; }
+
+input, textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+textarea { min-height: 80px; }
+
+ul { list-style: none; padding: 0; }
+
+li {
+  background: #f4f8f7;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin: 5px 0;
+}
+
+.mood {
+  font-size: 40px;
+  cursor: pointer;
+}
+
+#quote {
+  font-style: italic;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌿 Daily Planner</h1>
+
+<button onclick="showTab('dailyTab')">Daily</button>
+<button onclick="showTab('cleaningTab')">Cleaning</button>
+<button onclick="showTab('tasksTab')">Tasks</button>
+<button onclick="showTab('wellnessTab')">Wellness</button>
+<button onclick="showTab('mealsTab')">Meals</button>
+
+<!-- DAILY -->
+<div id="dailyTab" class="tab activeTab">
+
+<div class="section">
+<strong>Date:</strong> <span id="date"></span><br>
+<strong>Day:</strong> <span id="day"></span>
+</div>
+
+<div class="section">
+<strong>Mood</strong><br>
+<span class="mood" onclick="setMood('🤩')">🤩</span>
+<span class="mood" onclick="setMood('😀')">😀</span>
+<span class="mood" onclick="setMood('😐')">😐</span>
+<span class="mood" onclick="setMood('😕')">😕</span>
+<span class="mood" onclick="setMood('😭')">😭</span>
+<p id="moodDisplay"></p>
+</div>
+
+<div class="section">
+<strong>Goal</strong>
+<input id="goal">
+</div>
+
+<div class="section">
+<strong>Quote</strong>
+<p id="quote"></p>
+</div>
+
+<div class="section">
+<strong>Reminders</strong>
+<textarea id="reminders"></textarea>
+</div>
+
+<div class="section">
+<strong>Water</strong>
+<div id="waterCount"></div>
+<div id="waterContainer"></div>
+</div>
+
+<div class="section">
+<strong>Grateful</strong>
+<textarea id="grateful"></textarea>
+</div>
+
+<div class="section">
+<strong>Notes</strong>
+<textarea id="notes"></textarea>
+</div>
+
+</div>
+
+<!-- CLEANING -->
+<div id="cleaningTab" class="tab">
+
+<div class="section">
+<strong>Daily Clean</strong>
+<ul id="dailyClean"></ul>
+</div>
+
+<div class="section">
+<strong>Weekly Clean</strong>
+<div id="weeklyClean"></div>
+</div>
+
+<div class="section">
+<strong>Monthly Clean</strong>
+<div id="monthlyClean"></div>
+</div>
+
+</div>
+
+<!-- TASKS -->
+<div id="tasksTab" class="tab">
+
+<div class="section">
+<strong>To-Do</strong>
+<input id="todoInput">
+<button onclick="addTodo()">Add</button>
+<ul id="todoList"></ul>
+</div>
+
+<div class="section">
+<strong>Homework</strong>
+<input id="hwTask">
+<input type="date" id="hwDate">
+<button onclick="addHW()">Add</button>
+<ul id="hwList"></ul>
+</div>
+
+</div>
+
+<!-- WELLNESS -->
+<div id="wellnessTab" class="tab">
+
+<div class="section">
+  <strong>Habits</strong>
+  <ul id="habits"></ul>
+</div>
+
+<div class="section">
+  <strong>Morning Routine</strong>
+  <ul id="morning"></ul>
+</div>
+
+<div class="section">
+  <strong>Evening Routine</strong>
+  <ul id="evening"></ul>
+</div>
+
+<div class="section">
+  <strong>Yoga</strong>
+  <ul id="yoga"></ul>
+</div>
+
+</div>
+
+<!-- MEALS -->
+<div id="mealsTab" class="tab">
+<div class="section"><strong>Meals</strong><div id="meals"></div></div>
+</div>
+
+</div>
+
+<script>
+function renderChecklist(id, arr){
+
+let ul = document.getElementById(id);
+ul.innerHTML = "";
+
+let storageKey = "checklist_" + id;
+let saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+arr.forEach((task, i)=>{
+
+let li = document.createElement("li");
+
+let cb = document.createElement("input");
+cb.type = "checkbox";
+cb.checked = saved[i] || false;
+
+cb.onchange = ()=>{
+saved[i] = cb.checked;
+localStorage.setItem(storageKey, JSON.stringify(saved));
+};
+
+let span = document.createElement("span");
+span.textContent = " " + task;
+
+li.appendChild(cb);
+li.appendChild(span);
+
+ul.appendChild(li);
+});
+}
+// HABITS
+renderChecklist("habits",[
+"Drink 8 glasses of water",
+"Check bank balance & update budget",
+"7–9 hours of sleep",
+"Make bed"
+]);
+
+// MORNING ROUTINE
+renderChecklist("morning",[
+"Wake up",
+"Walk Dogs",
+"Feed dogs & cat",
+"Meds",
+"Make Breakfast",
+"Eat Breakfast",
+"Dishes",
+"Tidy",
+"Yoga",
+"Meditate",
+"Study",
+"Shower",
+"Moisturize",
+"Hygiene",
+"Get Dressed",
+"Collect Items & Leave"
+]);
+
+// EVENING ROUTINE
+renderChecklist("evening",[
+"Walk Dogs",
+"Feed Dogs & cat",
+"Make Dinner",
+"Eat dinner",
+"Change clothes",
+"Study",
+"Meds",
+"Hygiene",
+"Yoga",
+"Go to bed"
+]);
+
+// Tabs
+function showTab(id){
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("activeTab"));
+document.getElementById(id).classList.add("activeTab");
+}
+
+// Date
+let now=new Date();
+document.getElementById("date").textContent=now.toLocaleDateString();
+document.getElementById("day").textContent=now.toLocaleDateString("en-US",{weekday:"long"});
+
+//Water
+let water = JSON.parse(localStorage.getItem("water") || "[]");
+if(water.length !== 8) water = Array(8).fill(false);
+
+function renderWater(){
+let container = document.getElementById("waterContainer");
+let count = water.filter(x=>x).length;
+
+document.getElementById("waterCount").textContent = count + "/8";
+
+container.innerHTML="";
+
+water.forEach((v,i)=>{
+let span = document.createElement("span");
+span.textContent = "💧";
+span.style.fontSize="28px";
+span.style.cursor="pointer";
+span.style.opacity = v ? "1" : "0.3";
+
+span.onclick = ()=>{
+water[i] = !water[i];
+localStorage.setItem("water", JSON.stringify(water));
+renderWater();
+};
+
+container.appendChild(span);
+});
+}
+renderWater();
+
+// Mood
+function setMood(m){
+localStorage.setItem("mood",m);
+document.getElementById("moodDisplay").textContent=m;
+}
+document.getElementById("moodDisplay").textContent=localStorage.getItem("mood")||"";
+
+// Save text
+["goal","reminders","notes","grateful"].forEach(id=>{
+let el=document.getElementById(id);
+el.value=localStorage.getItem(id)||"";
+el.oninput=()=>localStorage.setItem(id,el.value);
+});
+
+// Quote
+const quotes = [
+{q:"The only thing we have to fear is fear itself.",a:"Franklin D. Roosevelt"},
+{q:"Do what you can, with what you have, where you are.",a:"Theodore Roosevelt"},
+{q:"It always seems impossible until it’s done.",a:"Nelson Mandela"}
+];
+
+function renderQuote(){
+let pick = quotes[Math.floor(Math.random()*quotes.length)];
+document.getElementById("quote").textContent =
+`"${pick.q}" — ${pick.a}`;
+}
+renderQuote();
+
+// ================= CLEANING SYSTEM =================
+
+// ---------- DAILY CLEAN ----------
+function renderChecklist(id, arr){
+  let ul = document.getElementById(id);
+  ul.innerHTML = "";
+
+  let storageKey = "checklist_" + id;
+  let saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+  arr.forEach((task, i)=>{
+    let li = document.createElement("li");
+
+    let cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = saved[i] || false;
+
+    cb.onchange = ()=>{
+      saved[i] = cb.checked;
+      localStorage.setItem(storageKey, JSON.stringify(saved));
+    };
+
+    li.appendChild(cb);
+    li.appendChild(document.createTextNode(" " + task));
+
+    ul.appendChild(li);
+  });
+}
+
+renderChecklist("dailyClean",[
+  "Kitchen counters",
+  "Bathroom counters",
+  "Make bed",
+  "Mail",
+  "Dishes",
+  "Trash",
+  "Sweep entryway",
+  "Sweep bathroom"
+]);
+
+// WEEKLY CLEAN (YOUR REAL DATA)
+const weeklyTasks = {
+Monday:{
+Den:[
+"Dresser","Couch","Side table","TV Stand","Coffee Table","Shoe Rack",
+"My Side Table","My Recliner","His Recliner","His Side Table",
+"Peloton Nook","Bookshelf","File Cabinet","Desks / behind recliners",
+"Vacuum Carpet","Sweep","Mop","Trash","Air freshener"
+]
+},
+Tuesday:{
+Laundry:[
+"Lights","Darks","Delicates","Sheets","Delicates","Bulky items"
+],
+Kitchen:[
+"Coffee Counter","Hood","Stove/Oven","Short Counter","Dishwasher",
+"Sink","Long counter","Trash Can","Top of fridge","Metal Shelves",
+"Top of Pantry","Washer","Vacuum Runners","Sweep","Mop","Trash","Air Freshener"
+]
+},
+Wednesday:{
+Bathroom:[
+"Toilet inside","Toilet outside","Toilet shelves","Sills","Mirror",
+"Counter/Sink","Side Table","Tub/Shower","Floor items",
+"Sweep","Mop","Trash","Air freshener"
+]
+},
+Thursday:{
+"Living Room":[
+"Desk","Small table","Cat Sill/Table","Cat Corner","Grey Couch",
+"TV Stand","Old Couch","Brown Couch","Chest","Side table",
+"Chair","Crate","Alcove sills","Hallway Side Tables",
+"Vacuum","Trash","Air freshener"
+]
+},
+Friday:{
+Office:[
+"Bookshelf","Grey Seat","Desk","Sills","Plastic Drawers",
+"Vacuum","Trash","Air freshener"
+]
+},
+Saturday:{
+Nursery:[
+"Tall Dresser","Long dresser","Changing Table","Crib","Rocker",
+"Sweep","Mop","Trash","Air Freshener"
+]
+},
+Sunday:{
+Bedroom:[
+"TV Stand/Dresser","Big Dresser","Mirror Dresser","My Side Table",
+"My Floor","Extra side table","Small Dresser","His side table",
+"Wood Safe","Extra side table","His floor","Foot of the bed",
+"Make bed","Vacuum","Trash","Air freshener"
+]
+}
+};
+
+// RENDER WEEKLY CLEAN (WITH CHECKBOX SAVE)
+function renderWeeklyClean(){
+const container = document.getElementById("weeklyClean");
+container.innerHTML="";
+
+const today = new Date().toLocaleDateString("en-US",{weekday:"long"});
+const dayTasks = weeklyTasks[today];
+
+if(!dayTasks){
+container.innerHTML = "No tasks today";
+return;
+}
+
+Object.entries(dayTasks).forEach(([room,tasks])=>{
+
+// Room title
+const h = document.createElement("h4");
+h.textContent = room;
+container.appendChild(h);
+
+// List
+const ul = document.createElement("ul");
+
+tasks.forEach((task,i)=>{
+const li = document.createElement("li");
+
+// Checkbox
+const cb = document.createElement("input");
+cb.type = "checkbox";
+
+// UNIQUE SAVE KEY
+let key = `weekly-${today}-${room}-${i}`;
+
+// LOAD STATE
+cb.checked = localStorage.getItem(key) === "true";
+
+// SAVE STATE
+cb.onchange = () => {
+localStorage.setItem(key, cb.checked);
+};
+
+// LABEL
+const span = document.createElement("span");
+span.textContent = " " + task;
+
+// BUILD
+li.appendChild(cb);
+li.appendChild(span);
+ul.appendChild(li);
+});
+
+container.appendChild(ul);
+
+});
+
+}
+
+// RUN IT
+renderWeeklyClean();
+
+// ---------- MONTHLY CLEAN ----------
+const monthlyTasks = {
+  1:"Clean inside fridge",
+  2:"Clean microwave",
+  3:"Wipe cabinets",
+  4:"Clean oven",
+  5:"Wipe baseboards",
+  6:"Clean windows",
+  7:"Dust vents",
+  8:"Clean doors",
+  9:"Wipe walls",
+  10:"Clean light switches",
+  11:"Clean trash cans",
+  12:"Organize pantry",
+  13:"Deep clean sink",
+  14:"Clean dishwasher",
+  15:"Organize fridge",
+  16:"Dust furniture",
+  17:"Clean mirrors",
+  18:"Vacuum furniture",
+  19:"Clean under furniture",
+  20:"Wash blankets",
+  21:"Wash curtains",
+  22:"Clean fans",
+  23:"Dust shelves",
+  24:"Clean washer",
+  25:"Clean dryer",
+  26:"Organize closet",
+  27:"Rotate mattress",
+  28:"Declutter items",
+  29:"Deep clean bathroom",
+  30:"Catch-up / rest",
+  31:"Reset day"
+};
+
+function renderMonthlyClean(){
+  let container = document.getElementById("monthlyClean");
+  container.innerHTML = "";
+
+  let today = new Date().getDate();
+  let task = monthlyTasks[today] || "Rest";
+
+  let ul = document.createElement("ul");
+  let li = document.createElement("li");
+
+  let cb = document.createElement("input");
+  cb.type = "checkbox";
+
+  let key = `monthly-${today}`;
+  cb.checked = localStorage.getItem(key) === "true";
+
+  cb.onchange = ()=>{
+    localStorage.setItem(key, cb.checked);
+  };
+
+  li.appendChild(cb);
+  li.appendChild(document.createTextNode(" " + task));
+
+  ul.appendChild(li);
+  container.appendChild(ul);
+}
+
+renderMonthlyClean();
+// TODOS
+let todos=JSON.parse(localStorage.getItem("todos")||"[]");
+
+function renderTodos(){
+let ul=document.getElementById("todoList");
+ul.innerHTML="";
+todos.forEach((t,i)=>{
+let li=document.createElement("li");
+li.textContent=t;
+li.onclick=()=>{
+todos.splice(i,1);
+localStorage.setItem("todos",JSON.stringify(todos));
+renderTodos();
+};
+ul.appendChild(li);
+});
+}
+function addTodo(){
+let v=document.getElementById("todoInput").value;
+if(!v) return;
+todos.push(v);
+localStorage.setItem("todos",JSON.stringify(todos));
+renderTodos();
+}
+renderTodos();
+
+// Homework
+let hw=JSON.parse(localStorage.getItem("hw")||"[]");
+
+function renderHW(){
+let ul=document.getElementById("hwList");
+ul.innerHTML="";
+hw.forEach((h,i)=>{
+let li=document.createElement("li");
+li.textContent=h.task+" ("+h.date+")";
+ul.appendChild(li);
+});
+}
+function addHW(){
+let t=document.getElementById("hwTask").value;
+let d=document.getElementById("hwDate").value;
+if(!t||!d) return;
+hw.push({task:t,date:d});
+localStorage.setItem("hw",JSON.stringify(hw));
+renderHW();
+}
+renderHW();
+
+// ---------- MEAL SYSTEM (YOUR REAL FOODS, WEEKLY LOCKED) ----------
+
+function pick(arr){
+return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function getWeekKey(){
+let d=new Date();
+let day=d.getDay();
+let start=new Date(d);
+start.setDate(d.getDate()-day);
+return start.toISOString().slice(0,10);
+}
+
+// YOUR FOODS
+const breakfast=[
+"Fried eggs & livermush",
+"Oatmeal",
+"Cereal",
+"Breakfast corndog"
+];
+
+const lunch=[
+"Deli Sandwich",
+"Pizza",
+"Ramen",
+"Uncrustables",
+"Lunchables",
+"Chicken nuggets",
+"Salad",
+"Eat out",
+"Frozen meal",
+"Mac & Cheese"
+];
+
+const dinner=[
+"Mac & Cheese w lil smokies & broccoli",
+"Steak w/ mashed potatoes",
+"Pork chops w/ mashed potatoes",
+"Creamy lemon chicken pasta",
+"Cajun chicken fettuccine",
+"Chicken spinach Alfredo Rotini",
+"Spaghetti w/ meat sauce & garlic bread",
+"Pizza",
+"Eat out",
+"Leftovers"
+];
+
+const healthySnack=[
+"Apples & caramel",
+"Chopped fruit",
+"Grapes",
+"Cucumbers & ranch",
+"Carrots & ranch"
+];
+
+const unhealthySnack=[
+"Chips",
+"Cookies",
+"Crackers",
+"Pudding",
+"Snack cakes"
+];
+
+function renderMeals(){
+
+let key = "meals_" + getWeekKey();
+let data = JSON.parse(localStorage.getItem(key));
+
+// ONLY GENERATE IF IT DOESN’T EXIST (THIS FIXES YOUR ISSUE)
+if(!data){
+data = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map(day=>({
+day,
+breakfast: pick(breakfast),
+lunch: pick(lunch),
+dinner: pick(dinner),
+healthy: pick(healthySnack),
+unhealthy: pick(unhealthySnack)
+}));
+
+localStorage.setItem(key, JSON.stringify(data));
+}
+
+// RENDER
+let cont = document.getElementById("meals");
+cont.innerHTML = "";
+
+data.forEach(d=>{
+let div = document.createElement("div");
+
+div.innerHTML = `
+<strong>${d.day}</strong><br>
+🍳 Breakfast: ${d.breakfast}<br>
+🥪 Lunch: ${d.lunch}<br>
+🍽️ Dinner: ${d.dinner}<br>
+🥕 Healthy Snack: ${d.healthy}<br>
+🍪 Unhealthy Snack: ${d.unhealthy}
+<br><br>
+`;
+
+cont.appendChild(div);
+});
+
+}
+
+renderMeals();
+
+// Yoga
+function renderYoga(){
+const flows = [
+["Child’s Pose","Cat-Cow","Downward Dog","Low Lunge","Warrior II","Forward Fold","Twist","Savasana"],
+["Breathing","Cat-Cow","Plank","Cobra","Downward Dog","Pigeon","Stretch","Savasana"]
+];
+
+let pick = flows[Math.floor(Math.random()*flows.length)];
+
+let ul = document.getElementById("yoga");
+ul.innerHTML="";
+
+pick.forEach(pose=>{
+let li=document.createElement("li");
+li.textContent=pose;
+ul.appendChild(li);
+});
+}
+renderYoga();
+
+</script>
+
+</body>
+</html>
